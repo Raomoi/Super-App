@@ -1,0 +1,1490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Maison Moisan – Super App</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Ajout anti-référencement -->
+<meta name="robots" content="noindex, nofollow" />
+
+  <link rel="manifest" href="manifest.webmanifest" />
+
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Maison Moisan" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+
+  <style>
+    :root {
+      --color-accent: #ac7942;
+      --color-bg: #ffffff;
+      --color-text: #231f20;
+      --color-muted: #f5f5f5;
+      --color-border: #dddddd;
+      --radius: 12px;
+      --shadow-soft: 0 2px 8px rgba(0,0,0,0.06);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--color-bg);
+      color: var(--color-text);
+      padding-bottom: 64px; /* pour la nav du bas */
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--color-border);
+      background: var(--color-bg);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    header img.logo {
+      height: 40px;
+      width: auto;
+      margin-right: 0.75rem;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+
+    header .titles { display: flex; flex-direction: column; }
+    header .app-title { font-size: 1.1rem; font-weight: 700; }
+    header .app-subtitle { font-size: 0.8rem; opacity: 0.7; }
+
+    main {
+      padding: 0.75rem 1rem 1.5rem;
+      max-width: 1080px;
+      margin: 0 auto;
+    }
+
+    .year-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .year-row label {
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .year-row select {
+      padding: 0.3rem 0.4rem;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      font-size: 0.9rem;
+    }
+
+    .sync-badge {
+      font-size: 0.75rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 999px;
+      background: var(--color-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #999;
+    }
+
+    .sync-dot.ok { background: #2e7d32; }
+    .sync-dot.old { background: #ff9800; }
+    .sync-dot.none { background: #999; }
+
+    .card {
+      background: #ffffff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-soft);
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.9rem;
+      border: 1px solid #f0f0f0;
+    }
+
+    .card h2 { margin: 0 0 0.5rem; font-size: 1rem; }
+    .card h3 { margin: 0 0 0.4rem; font-size: 0.95rem; }
+    .card small { font-size: 0.75rem; opacity: 0.7; }
+
+    .section-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 0.3rem; }
+    .muted { font-size: 0.8rem; opacity: 0.7; }
+
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 0.4rem;
+    }
+
+    .input-row label {
+      font-size: 0.85rem;
+      min-width: 160px;
+    }
+
+    .input-row input,
+    .input-row select {
+      padding: 0.3rem 0.4rem;
+      border-radius: 6px;
+      border: 1px solid var(--color-border);
+      font-size: 0.85rem;
+      min-width: 100px;
+    }
+
+    .btn {
+      border-radius: 999px;
+      border: none;
+      padding: 0.35rem 0.8rem;
+      cursor: pointer;
+      font-size: 0.85rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .btn-primary { background: var(--color-accent); color: #ffffff; }
+    .btn-outline { background: transparent; border: 1px solid var(--color-accent); color: var(--color-accent); }
+    .btn-sm { padding: 0.2rem 0.6rem; font-size: 0.8rem; }
+
+    .status { font-size: 0.8rem; margin-top: 0.3rem; }
+    .status.ok { color: #2e7d32; }
+    .status.error { color: #c62828; }
+    .status.info { color: #555; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 0.75rem;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    table th, table td {
+      padding: 0.35rem 0.4rem;
+      text-align: left;
+    }
+
+    table thead { background: var(--color-muted); }
+    table tbody tr:nth-child(even) { background: #fafafa; }
+
+    .highlight-number { font-size: 1.2rem; font-weight: 700; }
+    .highlight-label { font-size: 0.8rem; opacity: 0.7; }
+
+    .highlights {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 0.6rem;
+      margin-top: 0.3rem;
+    }
+
+    .highlight-card {
+      background: var(--color-muted);
+      border-radius: 10px;
+      padding: 0.4rem 0.6rem;
+    }
+
+    .pill-tabs {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.75rem;
+    }
+
+    .pill-tabs button {
+      border: none;
+      background: var(--color-muted);
+      padding: 0.3rem 0.7rem;
+      border-radius: 999px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      color: var(--color-text);
+      opacity: 0.9;
+    }
+
+    .pill-tabs button.active {
+      background: var(--color-accent);
+      color: #ffffff;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      border-radius: 999px;
+      padding: 0.15rem 0.55rem;
+      font-size: 0.75rem;
+      background: var(--color-muted);
+    }
+
+    .badge.manual {
+      background: rgba(255, 152, 0, 0.12);
+      color: #e65100;
+      font-size: 0.7rem;
+      padding: 0.1rem 0.45rem;
+    }
+
+    .badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #e65100;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      border-top: 1px solid var(--color-border);
+      background: #fff;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .bottom-nav button {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-size: 0.8rem;
+      padding: 0.2rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      color: #777;
+    }
+
+    .bottom-nav button span.icon {
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    .bottom-nav button.active {
+      color: var(--color-accent);
+      font-weight: 600;
+    }
+
+    .mt-05 { margin-top: 0.5rem; }
+    .mt-1 { margin-top: 1rem; }
+    .mb-05 { margin-bottom: 0.5rem; }
+
+    @media (max-width: 600px) {
+      header { align-items: flex-start; }
+      header img.logo { height: 32px; }
+      .year-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <img src="logo-maisonmoisan.jpg" alt="Maison Moisan" class="logo" />
+    <div class="titles">
+      <div class="app-title">Maison Moisan</div>
+      <div class="app-subtitle">Outils d’hôte & compta</div>
+    </div>
+  </header>
+
+  <main>
+    <div class="year-row">
+      <div>
+        <label for="year-select">Année :</label>
+        <select id="year-select"></select>
+      </div>
+      <div id="last-sync" class="sync-badge">
+        <span id="last-sync-dot" class="sync-dot none"></span>
+        <span id="last-sync-text">Dernière synchro : jamais</span>
+      </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard">
+      <div class="card">
+        <h2>Vue d’ensemble du mois</h2>
+        <small id="dashboard-month-label"></small>
+        <div class="highlights mt-05" id="dashboard-highlights"></div>
+        <p class="muted mt-05">
+          Cette vue combine le <strong>budget</strong> et les <strong>ménages</strong> pour le mois sélectionné.
+        </p>
+      </div>
+    </section>
+
+    <!-- BUDGET -->
+    <section id="view-budget" style="display:none;">
+      <div class="card">
+        <h2>Budget mensuel</h2>
+        <small id="budget-month-label"></small>
+
+        <div class="mt-1 grid-2">
+          <div>
+            <h3>Revenus & comptes</h3>
+            <div class="input-row">
+              <label for="budget-airbnb-received">Déjà versé par Airbnb (€)</label>
+              <input type="number" step="0.01" id="budget-airbnb-received" />
+            </div>
+            <div class="input-row">
+              <label for="budget-airbnb-remaining">Reste à verser par Airbnb (€)</label>
+              <input type="number" step="0.01" id="budget-airbnb-remaining" />
+            </div>
+            <div class="input-row">
+              <label for="budget-airbnb-balance">Solde actuel compte Airbnb Income (€)</label>
+              <input type="number" step="0.01" id="budget-airbnb-balance" />
+            </div>
+            <div class="input-row">
+              <label for="budget-cleaning-balance">Solde actuel compte Ménage (€)</label>
+              <input type="number" step="0.01" id="budget-cleaning-balance" />
+            </div>
+            <p class="muted mt-05">
+              Ces valeurs sont propres au <strong>mois</strong> et à l’<strong>année</strong> sélectionnés.
+            </p>
+          </div>
+
+          <div>
+            <h3>Résultats du mois</h3>
+            <div id="budget-summary" class="highlights"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Détail de l’enveloppe</h2>
+        <div id="budget-envelope-detail"></div>
+      </div>
+    </section>
+
+    <!-- MENAGES & URSSAF -->
+    <section id="view-cleaning" style="display:none;">
+      <div class="pill-tabs" id="cleaning-tabs"></div>
+
+      <!-- Vue mois -->
+      <div id="cleaning-view-months">
+        <div class="card">
+          <h2 id="month-title">Mois</h2>
+          <small id="month-subtitle"></small>
+
+          <div class="mt-1 grid-2">
+            <div>
+              <h3>Détail par appartement</h3>
+              <div id="month-apartments-table"></div>
+              <p class="muted mt-05">
+                <span class="badge manual">
+                  <span class="badge-dot"></span>
+                  Modifié manuellement (enregistré dans l’onglet Overrides)
+                </span>
+              </p>
+            </div>
+            <div>
+              <h3>Totaux du mois</h3>
+              <div class="highlights" id="month-summary"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Vue trimestres -->
+      <div id="cleaning-view-quarters" style="display:none;">
+        <div class="pill-tabs" id="quarter-tabs"></div>
+
+        <div class="card">
+          <h2 id="quarter-title">Trimestre</h2>
+          <small id="quarter-subtitle"></small>
+
+          <div class="mt-1">
+            <h3>Détail du trimestre</h3>
+            <div id="quarter-detail-table"></div>
+          </div>
+
+          <div class="mt-1 grid-2">
+            <div>
+              <h3>Synthèse trimestre</h3>
+              <div class="highlights" id="quarter-summary"></div>
+            </div>
+            <div>
+              <h3>Déclaration URSSAF</h3>
+              <div id="quarter-urssaf"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARAMÈTRES -->
+    <section id="view-settings" style="display:none;">
+      <div class="card">
+        <h2>Source Google Sheets (Ménages)</h2>
+        <div class="input-row">
+          <label for="api-url">URL API Apps Script</label>
+          <input type="text" id="api-url" placeholder="https://script.google.com/macros/s/.../exec" />
+        </div>
+        <button class="btn btn-outline btn-sm" id="test-api-btn">Tester la connexion & synchroniser</button>
+        <div id="api-status" class="status info">Aucune connexion testée.</div>
+      </div>
+
+      <div class="card">
+        <h2>Paramètres Ménages & URSSAF</h2>
+        <div class="input-row">
+          <label for="hourly-rate">Taux horaire ménage (€ / h)</label>
+          <input type="number" step="0.01" id="hourly-rate" />
+        </div>
+        <div class="input-row">
+          <label for="urssaf-total-rate">Taux URSSAF total (%)</label>
+          <input type="number" step="0.1" id="urssaf-total-rate" />
+        </div>
+        <div class="input-row">
+          <label for="urssaf-aziza-rate">Taux payé par Aziza (%)</label>
+          <input type="number" step="0.1" id="urssaf-aziza-rate" />
+        </div>
+        <p class="muted">
+          Ta part = taux total – part Aziza. <span id="urssaf-your-part"></span>
+        </p>
+
+        <h3 class="mt-1">Appartements</h3>
+        <div id="apartments-settings"></div>
+      </div>
+
+      <div class="card">
+        <h2>Paramètres Budget</h2>
+        <p class="muted mb-05">
+          Tu peux ajuster ici les postes qui composent l’enveloppe mensuelle (8 103 € actuellement).
+          Un poste est marqué comme <strong>“Ménage (provision)”</strong>.
+        </p>
+        <div id="budget-envelope-settings"></div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button id="nav-dashboard" class="active">
+      <span class="icon">🏠</span>
+      <span>Accueil</span>
+    </button>
+    <button id="nav-budget">
+      <span class="icon">💶</span>
+      <span>Budget</span>
+    </button>
+    <button id="nav-cleaning">
+      <span class="icon">🧹</span>
+      <span>Ménages</span>
+    </button>
+    <button id="nav-settings">
+      <span class="icon">⚙️</span>
+      <span>Paramètres</span>
+    </button>
+  </nav>
+
+  <script>
+    const APP_VERSION = "mm-superapp-2025-02-v1";
+
+    const MONTHS_FR = [
+      "Janvier","Février","Mars","Avril","Mai","Juin",
+      "Juillet","Août","Septembre","Octobre","Novembre","Décembre"
+    ];
+    const MONTHS_EN = [
+      "January","February","March","April","May","June",
+      "July","August","September","October","November","December"
+    ];
+
+    const QUARTERS = [
+      { id: "T1", label: "T1 – Janvier / Février / Mars", months: [0,1,2] },
+      { id: "T2", label: "T2 – Avril / Mai / Juin", months: [3,4,5] },
+      { id: "T3", label: "T3 – Juillet / Août / Septembre", months: [6,7,8] },
+      { id: "T4", label: "T4 – Octobre / Novembre / Décembre", months: [9,10,11] },
+    ];
+
+    const STORAGE_KEY = "mm_super_app_state_v1";
+
+    let state = {
+      activeModule: "dashboard",
+      activeYear: new Date().getFullYear(),
+      activeMonthIndex: new Date().getMonth(),
+      activeQuarterIndex: 0,
+      lastSyncAt: null,
+
+      settings: {
+        apiUrl: "",
+        hourlyRate: 29,
+        urssafTotalRate: 23.7,
+        urssafAzizaRate: 13.1,
+        apartments: [
+          { code: "GRD", name: "Grand Casimir", hoursPerCleaning: 3, cell: "I2" },
+          { code: "PRC", name: "Petit Prince", hoursPerCleaning: 2, cell: "J2" },
+          { code: "LOC", name: "Locaux", hoursPerCleaning: 1, cell: "" }
+        ],
+        budgetEnvelopePosts: [
+          { id: "salaire", label: "Salaire", amount: 3630, isCleaningProvision: false },
+          { id: "taxe_fonciere", label: "Taxe foncière", amount: 234, isCleaningProvision: false },
+          { id: "courses", label: "Courses", amount: 250, isCleaningProvision: false },
+          { id: "fond_travaux", label: "Fond travaux", amount: 100, isCleaningProvision: false },
+          { id: "urssaf", label: "URSSAF", amount: 954, isCleaningProvision: false },
+          { id: "electricite", label: "Electricité", amount: 200, isCleaningProvision: false },
+          { id: "charges_fixes", label: "Charges fixes", amount: 957, isCleaningProvision: false },
+          { id: "menage_prov", label: "Ménage (provision)", amount: 1050, isCleaningProvision: true },
+          { id: "acompte", label: "Acompte", amount: 208, isCleaningProvision: false },
+          { id: "charges_copro", label: "Charges copro", amount: 520, isCleaningProvision: false }
+        ]
+      },
+
+      frozenYears: {},
+      monthlyData: {},   // ménages par année/mois
+      manualHours: {},
+      monthPaid: {},     // (réservé si tu veux remettre payé/non payé plus tard)
+      budgetMonths: {}   // [year][monthIndex] -> { airbnbReceived, airbnbRemaining, airbnbIncomeBalance, cleaningAccountBalance }
+    };
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return;
+        const parsed = JSON.parse(raw);
+        state = { ...state, ...parsed };
+        state.settings = { ...state.settings, ...(parsed.settings || {}) };
+        if (!state.settings.budgetEnvelopePosts || !state.settings.budgetEnvelopePosts.length) {
+          state.settings.budgetEnvelopePosts = [...state.settings.budgetEnvelopePosts];
+        }
+      } catch (e) {
+        console.warn("Erreur loadState:", e);
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function formatMoney(value) {
+      if (isNaN(value)) return "0,00 €";
+      return Number(value).toLocaleString("fr-FR", { style: "currency", currency: "EUR" });
+    }
+
+    function ensureYearSelect() {
+      const sel = document.getElementById("year-select");
+      sel.innerHTML = "";
+      const currentYear = new Date().getFullYear();
+      const years = [];
+      for (let y = currentYear - 2; y <= currentYear + 2; y++) years.push(y);
+      years.forEach(y => {
+        const opt = document.createElement("option");
+        opt.value = y;
+        opt.textContent = y;
+        sel.appendChild(opt);
+      });
+      if (!years.includes(state.activeYear)) state.activeYear = currentYear;
+      sel.value = state.activeYear;
+    }
+
+    function isYearFrozen(year) {
+      return !!state.frozenYears[year];
+    }
+
+    function getYearMonthlyData(year) {
+      if (!state.monthlyData[year]) state.monthlyData[year] = {};
+      return state.monthlyData[year];
+    }
+
+    function getManualHours(year, monthIndex, code) {
+      if (!state.manualHours[year] ||
+          !state.manualHours[year][monthIndex] ||
+          typeof state.manualHours[year][monthIndex][code] === "undefined") {
+        return null;
+      }
+      return state.manualHours[year][monthIndex][code];
+    }
+
+    function setManualHours(year, monthIndex, code, hours) {
+      if (!state.manualHours[year]) state.manualHours[year] = {};
+      if (!state.manualHours[year][monthIndex]) state.manualHours[year][monthIndex] = {};
+      state.manualHours[year][monthIndex][code] = hours;
+      saveState();
+
+      const apiUrl = state.settings.apiUrl;
+      if (!apiUrl) return;
+
+      try {
+        const body = new URLSearchParams({
+          year: String(year),
+          monthIndex: String(monthIndex),
+          code: String(code),
+          hours: String(hours)
+        }).toString();
+
+        fetch(apiUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body
+        }).catch(err => {
+          console.warn("Erreur POST override:", err);
+        });
+      } catch (err) {
+        console.warn("Exception POST override:", err);
+      }
+    }
+
+    function getEffectiveApartmentMonth(year, monthIndex, code) {
+      const monthlyYear = getYearMonthlyData(year);
+      const monthData = monthlyYear[monthIndex];
+      const apCfg = state.settings.apartments.find(a => a.code === code);
+      const hourlyRate = state.settings.hourlyRate || 29;
+
+      let base = {
+        name: apCfg ? apCfg.name : code,
+        cleanings: 0,
+        hours: 0,
+        amount: 0
+      };
+
+      if (monthData && monthData.apartments && monthData.apartments[code]) {
+        const src = monthData.apartments[code];
+        base = {
+          name: src.name || base.name,
+          cleanings: src.cleanings || 0,
+          hours: src.hours || 0,
+          amount: src.amount || 0
+        };
+      }
+
+      const manual = getManualHours(year, monthIndex, code);
+      if (manual !== null && !isNaN(manual)) {
+        base.hours = manual;
+        base.amount = base.hours * hourlyRate;
+      } else if (code === "LOC") {
+        base.hours = 1;
+        base.amount = base.hours * hourlyRate;
+      }
+
+      return base;
+    }
+
+    function computeMonthlyTotals(year, monthIndex) {
+      let totalCleanings = 0;
+      let totalHours = 0;
+      let totalAmount = 0;
+      state.settings.apartments.forEach(ap => {
+        const info = getEffectiveApartmentMonth(year, monthIndex, ap.code);
+        totalCleanings += info.cleanings || 0;
+        totalHours += info.hours || 0;
+        totalAmount += info.amount || 0;
+      });
+      return { cleanings: totalCleanings, hours: totalHours, amount: totalAmount };
+    }
+
+    async function fetchYearFromApi(year) {
+      const apiUrl = state.settings.apiUrl;
+      if (!apiUrl) throw new Error("Aucune URL API définie.");
+      const url = apiUrl + (apiUrl.includes("?") ? "&" : "?") + "year=" + encodeURIComponent(year);
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Erreur API: " + response.status);
+      const data = await response.json();
+      return data;
+    }
+
+    function computeMonthlyDataFromRaw(year, rawData) {
+      const monthly = getYearMonthlyData(year);
+      const apartmentsFromSheet = state.settings.apartments.filter(ap => ap.code !== "LOC");
+      const hourlyRate = state.settings.hourlyRate || 29;
+      const monthsArr = Array.isArray(rawData.months) ? rawData.months : [];
+
+      monthsArr.forEach(m => {
+        const name = m.name;
+        const monthIndex = typeof m.monthIndex === "number" ? m.monthIndex : MONTHS_EN.indexOf(name);
+        if (monthIndex === -1) return;
+
+        const monthInfo = { apartments: {}, totals: { cleanings: 0, hours: 0, amount: 0 } };
+
+        apartmentsFromSheet.forEach(ap => {
+          const nbCleanings = Number(m[ap.code] || 0);
+          const hours = nbCleanings * ap.hoursPerCleaning;
+          const amount = hours * hourlyRate;
+
+          monthInfo.apartments[ap.code] = {
+            name: ap.name,
+            cleanings: nbCleanings,
+            hours,
+            amount
+          };
+
+          monthInfo.totals.cleanings += nbCleanings;
+          monthInfo.totals.hours += hours;
+          monthInfo.totals.amount += amount;
+        });
+
+        monthly[monthIndex] = monthInfo;
+      });
+
+      if (Array.isArray(rawData.overrides)) {
+        if (!state.manualHours[year]) state.manualHours[year] = {};
+        rawData.overrides.forEach(o => {
+          const mi = Number(o.monthIndex);
+          if (isNaN(mi)) return;
+          if (!state.manualHours[year][mi]) state.manualHours[year][mi] = {};
+          state.manualHours[year][mi][o.code] = Number(o.hours) || 0;
+        });
+      }
+
+      state.monthlyData[year] = monthly;
+      saveState();
+    }
+
+    async function loadYearData(year, options = { force: false }) {
+      if (isYearFrozen(year) && !options.force) return;
+      if (state.monthlyData[year] && !options.force) return;
+      const data = await fetchYearFromApi(year);
+      computeMonthlyDataFromRaw(year, data);
+      state.lastSyncAt = new Date().toISOString();
+      saveState();
+      updateLastSyncBadge();
+    }
+
+    function updateLastSyncBadge() {
+      const dot = document.getElementById("last-sync-dot");
+      const txt = document.getElementById("last-sync-text");
+      if (!state.lastSyncAt) {
+        dot.className = "sync-dot none";
+        txt.textContent = "Dernière synchro : jamais";
+        return;
+      }
+      const last = new Date(state.lastSyncAt);
+      const now = new Date();
+      const diffMs = now - last;
+      const diffHours = diffMs / (1000 * 60 * 60);
+
+      let cls = "sync-dot ok";
+      if (diffHours > 24) cls = "sync-dot old";
+
+      dot.className = cls;
+      const dateStr = last.toLocaleDateString("fr-FR");
+      const timeStr = last.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+      txt.textContent = `Dernière synchro : ${dateStr} à ${timeStr}`;
+    }
+
+    function renderBottomNav() {
+      const modules = ["dashboard","budget","cleaning","settings"];
+      modules.forEach(m => {
+        const btn = document.getElementById("nav-" + m);
+        if (!btn) return;
+        btn.classList.toggle("active", state.activeModule === m);
+      });
+
+      document.getElementById("view-dashboard").style.display = state.activeModule === "dashboard" ? "" : "none";
+      document.getElementById("view-budget").style.display = state.activeModule === "budget" ? "" : "none";
+      document.getElementById("view-cleaning").style.display = state.activeModule === "cleaning" ? "" : "none";
+      document.getElementById("view-settings").style.display = state.activeModule === "settings" ? "" : "none";
+    }
+
+    function renderCleaningTabs() {
+      const cont = document.getElementById("cleaning-tabs");
+      cont.innerHTML = "";
+      const tabs = [
+        { id: "months", label: "Mois" },
+        { id: "quarters", label: "Trimestres" }
+      ];
+      tabs.forEach(t => {
+        const btn = document.createElement("button");
+        btn.textContent = t.label;
+        if (t.id === "months" && document.getElementById("cleaning-view-months").style.display !== "none") {
+          btn.classList.add("active");
+        }
+        if (t.id === "quarters" && document.getElementById("cleaning-view-quarters").style.display !== "none") {
+          btn.classList.add("active");
+        }
+        btn.addEventListener("click", () => {
+          document.getElementById("cleaning-view-months").style.display = t.id === "months" ? "" : "none";
+          document.getElementById("cleaning-view-quarters").style.display = t.id === "quarters" ? "" : "none";
+          renderCleaningTabs();
+          if (t.id === "months") renderMonthsView();
+          if (t.id === "quarters") renderQuartersView();
+        });
+        cont.appendChild(btn);
+      });
+    }
+
+    function renderMonthTabs() {
+      const container = document.createElement("div");
+      container.className = "pill-tabs";
+      MONTHS_FR.forEach((name, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = name;
+        if (idx === state.activeMonthIndex) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          state.activeMonthIndex = idx;
+          saveState();
+          renderCleaning(); // rafraîchit mois
+          renderBudget();
+          renderDashboard();
+        });
+        container.appendChild(btn);
+      });
+      return container;
+    }
+
+    function renderMonthsView() {
+      const year = state.activeYear;
+      const monthIndex = state.activeMonthIndex;
+      const monthNameFr = MONTHS_FR[monthIndex];
+      const monthNameEn = MONTHS_EN[monthIndex];
+
+      const titleEl = document.getElementById("month-title");
+      const subtitleEl = document.getElementById("month-subtitle");
+      const tabContainer = document.getElementById("cleaning-view-months");
+
+      titleEl.textContent = `${monthNameFr} ${year}`;
+      subtitleEl.textContent = `Onglet Google Sheets : "${monthNameEn}"`;
+
+      const oldTabs = tabContainer.querySelector(".pill-tabs-months");
+      if (oldTabs) oldTabs.remove();
+      const monthsTabs = renderMonthTabs();
+      monthsTabs.classList.add("pill-tabs-months");
+      tabContainer.insertBefore(monthsTabs, tabContainer.firstChild.nextSibling);
+
+      const apartmentsContainer = document.getElementById("month-apartments-table");
+      let html = `<table>
+        <thead>
+          <tr>
+            <th>Appartement</th>
+            <th>Ménages</th>
+            <th>Heures</th>
+            <th>Montant</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      state.settings.apartments.forEach(ap => {
+        const info = getEffectiveApartmentMonth(year, monthIndex, ap.code);
+        const manual = getManualHours(year, monthIndex, ap.code) !== null;
+        html += `<tr>
+          <td>
+            ${ap.name} (${ap.code})
+            ${manual ? `<span class="badge manual"><span class="badge-dot"></span> modifié</span>` : ""}
+          </td>
+          <td>${info.cleanings}</td>
+          <td>
+            <input
+              type="number"
+              step="0.1"
+              value="${info.hours.toFixed(1)}"
+              data-year="${year}"
+              data-month="${monthIndex}"
+              data-code="${ap.code}"
+              class="hours-input"
+              style="width: 80px; padding: 0.2rem 0.3rem; border-radius: 6px; border: 1px solid #dddddd; font-size: 0.8rem;"
+            />
+          </td>
+          <td>${formatMoney(info.amount)}</td>
+        </tr>`;
+      });
+
+      html += `</tbody></table>`;
+      apartmentsContainer.innerHTML = html;
+
+      const summaryContainer = document.getElementById("month-summary");
+      summaryContainer.innerHTML = "";
+      const totals = computeMonthlyTotals(year, monthIndex);
+
+      [
+        { label: "Total ménages", value: totals.cleanings },
+        { label: "Total heures", value: totals.hours.toFixed(1) },
+        { label: "Montant dû", value: formatMoney(totals.amount) },
+      ].forEach(item => {
+        const div = document.createElement("div");
+        div.className = "highlight-card";
+        div.innerHTML = `
+          <div class="highlight-number">${item.value}</div>
+          <div class="highlight-label">${item.label}</div>
+        `;
+        summaryContainer.appendChild(div);
+      });
+
+      document.getElementById("month-apartments-table").addEventListener("input", onHoursInput);
+    }
+
+    function onHoursInput(e) {
+      const target = e.target;
+      if (!target.classList.contains("hours-input")) return;
+
+      const year = Number(target.getAttribute("data-year"));
+      const monthIndex = Number(target.getAttribute("data-month"));
+      const code = target.getAttribute("data-code");
+      let hours = Number(target.value || 0);
+      if (hours < 0) hours = 0;
+
+      setManualHours(year, monthIndex, code, hours);
+      renderCleaning();
+      renderBudget();
+      renderDashboard();
+    }
+
+    function renderQuarterTabs() {
+      const container = document.getElementById("quarter-tabs");
+      container.innerHTML = "";
+      QUARTERS.forEach((q, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = q.id;
+        if (idx === state.activeQuarterIndex) btn.classList.add("active");
+        btn.addEventListener("click", () => {
+          state.activeQuarterIndex = idx;
+          saveState();
+          renderQuartersView();
+        });
+        container.appendChild(btn);
+      });
+    }
+
+    function renderQuartersView() {
+      const year = state.activeYear;
+      const quarter = QUARTERS[state.activeQuarterIndex];
+
+      document.getElementById("quarter-title").textContent = `${quarter.id} ${year}`;
+      document.getElementById("quarter-subtitle").textContent = quarter.label;
+
+      renderQuarterTabs();
+
+      const detailContainer = document.getElementById("quarter-detail-table");
+      let rows = [];
+      quarter.months.forEach(mIndex => {
+        const monthLabel = MONTHS_FR[mIndex];
+        state.settings.apartments.forEach(ap => {
+          const info = getEffectiveApartmentMonth(year, mIndex, ap.code);
+          rows.push({
+            monthLabel,
+            apartment: `${ap.name} (${ap.code})`,
+            cleanings: info.cleanings,
+            hours: info.hours,
+            amount: info.amount
+          });
+        });
+      });
+
+      if (!rows.length) {
+        detailContainer.innerHTML = `<p class="muted">Aucune donnée disponible pour ce trimestre.</p>`;
+      } else {
+        let html = `<table>
+          <thead>
+            <tr>
+              <th>Mois</th>
+              <th>Appartement</th>
+              <th>Ménages</th>
+              <th>Heures</th>
+              <th>Montant</th>
+            </tr>
+          </thead>
+          <tbody>`;
+        rows.forEach(r => {
+          html += `<tr>
+            <td>${r.monthLabel}</td>
+            <td>${r.apartment}</td>
+            <td>${r.cleanings}</td>
+            <td>${r.hours.toFixed(1)}</td>
+            <td>${formatMoney(r.amount)}</td>
+          </tr>`;
+        });
+        html += `</tbody></table>`;
+        detailContainer.innerHTML = html;
+      }
+
+      const summaryContainer = document.getElementById("quarter-summary");
+      summaryContainer.innerHTML = "";
+
+      let totalCleanings = 0;
+      let totalHours = 0;
+      let totalAmount = 0;
+
+      quarter.months.forEach(mIndex => {
+        state.settings.apartments.forEach(ap => {
+          const info = getEffectiveApartmentMonth(year, mIndex, ap.code);
+          totalCleanings += info.cleanings || 0;
+          totalHours += info.hours || 0;
+          totalAmount += info.amount || 0;
+        });
+      });
+
+      [
+        { label: "Total ménages (trimestre)", value: totalCleanings },
+        { label: "Total heures (trimestre)", value: totalHours.toFixed(1) },
+        { label: "CA ménage trimestriel", value: formatMoney(totalAmount) },
+      ].forEach(item => {
+        const div = document.createElement("div");
+        div.className = "highlight-card";
+        div.innerHTML = `
+          <div class="highlight-number">${item.value}</div>
+          <div class="highlight-label">${item.label}</div>
+        `;
+        summaryContainer.appendChild(div);
+      });
+
+      const urssafContainer = document.getElementById("quarter-urssaf");
+      const totalRate = Number(state.settings.urssafTotalRate || 0);
+      const azizaRate = Number(state.settings.urssafAzizaRate || 0);
+      const yourRate = totalRate - azizaRate;
+
+      const cotisationTotale = totalAmount * (totalRate / 100);
+      const partAziza = totalAmount * (azizaRate / 100);
+      const partToi = totalAmount * (yourRate / 100);
+
+      urssafContainer.innerHTML = `
+        <div class="highlights">
+          <div class="highlight-card">
+            <div class="highlight-number">${formatMoney(totalAmount)}</div>
+            <div class="highlight-label">CA à déclarer</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-number">${formatMoney(cotisationTotale)}</div>
+            <div class="highlight-label">Cotisations URSSAF (${totalRate.toFixed(1)} %)</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-number">${formatMoney(partAziza)}</div>
+            <div class="highlight-label">Part Aziza (${azizaRate.toFixed(1)} %)</div>
+          </div>
+          <div class="highlight-card">
+            <div class="highlight-number">${formatMoney(partToi)}</div>
+            <div class="highlight-label">Ta part (${yourRate.toFixed(1)} %)</div>
+          </div>
+        </div>
+        <p class="muted mt-05">
+          Aziza paie ${azizaRate.toFixed(1)} % de son CA, tu prends en charge la différence,
+          soit ${yourRate.toFixed(1)} %.
+        </p>
+      `;
+    }
+
+    function getBudgetMonth(year, monthIndex) {
+      if (!state.budgetMonths[year]) state.budgetMonths[year] = {};
+      if (!state.budgetMonths[year][monthIndex]) {
+        state.budgetMonths[year][monthIndex] = {
+          airbnbReceived: 0,
+          airbnbRemaining: 0,
+          airbnbIncomeBalance: 0,
+          cleaningAccountBalance: 0
+        };
+      }
+      return state.budgetMonths[year][monthIndex];
+    }
+
+    function computeBudgetForMonth(year, monthIndex) {
+      const bm = getBudgetMonth(year, monthIndex);
+      const caTotal = (Number(bm.airbnbReceived) || 0) + (Number(bm.airbnbRemaining) || 0);
+
+      const cleaningTotals = computeMonthlyTotals(year, monthIndex);
+      const cleaningReel = cleaningTotals.amount || 0;
+
+      const posts = state.settings.budgetEnvelopePosts || [];
+      let envelopeTotal = 0;
+      let envelopeCleaningProvision = 0;
+      let envelopeHorsMenage = 0;
+
+      posts.forEach(p => {
+        const amt = Number(p.amount) || 0;
+        envelopeTotal += amt;
+        if (p.isCleaningProvision) {
+          envelopeCleaningProvision += amt;
+        } else {
+          envelopeHorsMenage += amt;
+        }
+      });
+
+      const chargesHorsMenage = envelopeHorsMenage;
+      const chargesReelles = chargesHorsMenage + cleaningReel;
+      const resultatMois = caTotal - chargesReelles;
+      const ecartMenage = envelopeCleaningProvision - cleaningReel;
+
+      const soldeAirbnbActuel = Number(bm.airbnbIncomeBalance) || 0;
+      const soldeAirbnbFinalPrevu = soldeAirbnbActuel + (Number(bm.airbnbRemaining) || 0) - chargesReelles;
+
+      const soldeMenageActuel = Number(bm.cleaningAccountBalance) || 0;
+      const soldeMenageFinal = soldeMenageActuel + envelopeCleaningProvision - cleaningReel;
+
+      return {
+        caTotal,
+        cleaningReel,
+        envelopeTotal,
+        envelopeCleaningProvision,
+        chargesHorsMenage,
+        chargesReelles,
+        resultatMois,
+        ecartMenage,
+        soldeAirbnbFinalPrevu,
+        soldeMenageFinal
+      };
+    }
+
+    function renderBudget() {
+      const year = state.activeYear;
+      const monthIndex = state.activeMonthIndex;
+      const monthNameFr = MONTHS_FR[monthIndex];
+
+      document.getElementById("budget-month-label").textContent = `${monthNameFr} ${year}`;
+
+      const bm = getBudgetMonth(year, monthIndex);
+
+      document.getElementById("budget-airbnb-received").value = bm.airbnbReceived ?? "";
+      document.getElementById("budget-airbnb-remaining").value = bm.airbnbRemaining ?? "";
+      document.getElementById("budget-airbnb-balance").value = bm.airbnbIncomeBalance ?? "";
+      document.getElementById("budget-cleaning-balance").value = bm.cleaningAccountBalance ?? "";
+
+      const res = computeBudgetForMonth(year, monthIndex);
+
+      const summary = document.getElementById("budget-summary");
+      summary.innerHTML = "";
+
+      const cards = [
+        { label: "CA total du mois", value: formatMoney(res.caTotal) },
+        { label: "Charges hors ménage", value: formatMoney(res.chargesHorsMenage) },
+        { label: "Ménage réel", value: formatMoney(res.cleaningReel) },
+        { label: "Charges réelles", value: formatMoney(res.chargesReelles) },
+        { label: "Résultat du mois", value: formatMoney(res.resultatMois) },
+        { label: "Écart provision / ménage", value: formatMoney(res.ecartMenage) },
+        { label: "Solde Airbnb fin de mois (théorique)", value: formatMoney(res.soldeAirbnbFinalPrevu) },
+        { label: "Solde compte ménage fin de mois (théorique)", value: formatMoney(res.soldeMenageFinal) }
+      ];
+
+      cards.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "highlight-card";
+        div.innerHTML = `
+          <div class="highlight-number">${c.value}</div>
+          <div class="highlight-label">${c.label}</div>
+        `;
+        summary.appendChild(div);
+      });
+
+      const detail = document.getElementById("budget-envelope-detail");
+      let total = 0;
+      let html = `<table>
+        <thead>
+          <tr>
+            <th>Poste</th>
+            <th>Montant</th>
+            <th>Type</th>
+          </tr>
+        </thead>
+        <tbody>`;
+      state.settings.budgetEnvelopePosts.forEach(p => {
+        const amt = Number(p.amount) || 0;
+        total += amt;
+        html += `<tr>
+          <td>${p.label}</td>
+          <td>${formatMoney(amt)}</td>
+          <td>${p.isCleaningProvision ? "Provision ménage" : "Autre"}</td>
+        </tr>`;
+      });
+      html += `<tr>
+        <td><strong>Total enveloppe</strong></td>
+        <td><strong>${formatMoney(total)}</strong></td>
+        <td></td>
+      </tr>`;
+      html += `</tbody></table>`;
+      detail.innerHTML = html;
+    }
+
+    function renderDashboard() {
+      const year = state.activeYear;
+      const monthIndex = state.activeMonthIndex;
+      const monthNameFr = MONTHS_FR[monthIndex];
+
+      document.getElementById("dashboard-month-label").textContent = `${monthNameFr} ${year}`;
+
+      const bm = getBudgetMonth(year, monthIndex);
+      const res = computeBudgetForMonth(year, monthIndex);
+      const cleans = computeMonthlyTotals(year, monthIndex);
+
+      const cont = document.getElementById("dashboard-highlights");
+      cont.innerHTML = "";
+
+      const cards = [
+        { label: "CA total (Budget)", value: formatMoney(res.caTotal) },
+        { label: "Résultat du mois", value: formatMoney(res.resultatMois) },
+        { label: "Heures ménage", value: `${cleans.hours.toFixed(1)} h` },
+        { label: "Coût ménage", value: formatMoney(cleans.amount) },
+        { label: "Solde Airbnb actuel", value: formatMoney(bm.airbnbIncomeBalance || 0) },
+        { label: "Solde ménage actuel", value: formatMoney(bm.cleaningAccountBalance || 0) }
+      ];
+
+      cards.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "highlight-card";
+        div.innerHTML = `
+          <div class="highlight-number">${c.value}</div>
+          <div class="highlight-label">${c.label}</div>
+        `;
+        cont.appendChild(div);
+      });
+    }
+
+    function renderApartmentsSettings() {
+      const container = document.getElementById("apartments-settings");
+      container.innerHTML = "";
+      state.settings.apartments.forEach((ap, idx) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.style.marginBottom = "0.5rem";
+        div.innerHTML = `
+          <div class="section-title">Appartement ${idx + 1}</div>
+          <div class="input-row">
+            <label>Nom affiché</label>
+            <input type="text" data-ap-index="${idx}" data-field="name" value="${ap.name}" />
+          </div>
+          <div class="input-row">
+            <label>Code</label>
+            <input type="text" data-ap-index="${idx}" data-field="code" value="${ap.code}" />
+          </div>
+          <div class="input-row">
+            <label>Heures par ménage</label>
+            <input type="number" step="0.1" data-ap-index="${idx}" data-field="hoursPerCleaning" value="${ap.hoursPerCleaning}" />
+          </div>
+          <div class="input-row">
+            <label>Cellule (Google Sheets)</label>
+            <input type="text" data-ap-index="${idx}" data-field="cell" value="${ap.cell}" />
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function renderBudgetEnvelopeSettings() {
+      const container = document.getElementById("budget-envelope-settings");
+      container.innerHTML = "";
+      state.settings.budgetEnvelopePosts.forEach((p, idx) => {
+        const div = document.createElement("div");
+        div.className = "card";
+        div.style.marginBottom = "0.5rem";
+        div.innerHTML = `
+          <div class="section-title">Poste ${idx + 1}</div>
+          <div class="input-row">
+            <label>Libellé</label>
+            <input type="text" data-env-index="${idx}" data-env-field="label" value="${p.label}" />
+          </div>
+          <div class="input-row">
+            <label>Montant mensuel (€)</label>
+            <input type="number" step="0.01" data-env-index="${idx}" data-env-field="amount" value="${p.amount}" />
+          </div>
+          <div class="input-row">
+            <label>Marquer comme provision ménage</label>
+            <select data-env-index="${idx}" data-env-field="isCleaningProvision">
+              <option value="false"${p.isCleaningProvision ? "" : " selected"}>Non</option>
+              <option value="true"${p.isCleaningProvision ? " selected" : ""}>Oui</option>
+            </select>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function updateUrssafYourPartDisplay() {
+      const totalRate = Number(document.getElementById("urssaf-total-rate").value || 0);
+      const azizaRate = Number(document.getElementById("urssaf-aziza-rate").value || 0);
+      const yourRate = totalRate - azizaRate;
+      document.getElementById("urssaf-your-part").textContent =
+        ` Ta part actuelle serait de ${yourRate.toFixed(1)} %.`;
+    }
+
+    function renderSettings() {
+      document.getElementById("api-url").value = state.settings.apiUrl || "";
+      document.getElementById("hourly-rate").value = state.settings.hourlyRate;
+      document.getElementById("urssaf-total-rate").value = state.settings.urssafTotalRate;
+      document.getElementById("urssaf-aziza-rate").value = state.settings.urssafAzizaRate;
+      updateUrssafYourPartDisplay();
+      renderApartmentsSettings();
+      renderBudgetEnvelopeSettings();
+    }
+
+    function renderCleaning() {
+      renderCleaningTabs();
+      renderMonthsView();
+      renderQuartersView();
+    }
+
+    async function init() {
+      loadState();
+      ensureYearSelect();
+      updateLastSyncBadge();
+
+      const initialYear = state.activeYear;
+      const forceReload = !isYearFrozen(initialYear);
+
+      try {
+        await loadYearData(initialYear, { force: forceReload });
+      } catch (e) {
+        console.warn("Erreur chargement année:", e);
+      }
+
+      renderBottomNav();
+      renderCleaning();
+      renderBudget();
+      renderDashboard();
+      renderSettings();
+
+      document.getElementById("nav-dashboard").addEventListener("click", () => {
+        state.activeModule = "dashboard";
+        saveState();
+        renderBottomNav();
+        renderDashboard();
+      });
+      document.getElementById("nav-budget").addEventListener("click", () => {
+        state.activeModule = "budget";
+        saveState();
+        renderBottomNav();
+        renderBudget();
+      });
+      document.getElementById("nav-cleaning").addEventListener("click", () => {
+        state.activeModule = "cleaning";
+        saveState();
+        renderBottomNav();
+        renderCleaning();
+      });
+      document.getElementById("nav-settings").addEventListener("click", () => {
+        state.activeModule = "settings";
+        saveState();
+        renderBottomNav();
+        renderSettings();
+      });
+
+      document.getElementById("year-select").addEventListener("change", async (e) => {
+        const newYear = Number(e.target.value);
+        state.activeYear = newYear;
+        saveState();
+        try {
+          await loadYearData(newYear, { force: !isYearFrozen(newYear) });
+        } catch (err) {
+          console.warn("Erreur chargement année:", err);
+        }
+        renderCleaning();
+        renderBudget();
+        renderDashboard();
+      });
+
+      document.getElementById("test-api-btn").addEventListener("click", async () => {
+        const status = document.getElementById("api-status");
+        const url = document.getElementById("api-url").value.trim();
+        if (!url) {
+          status.textContent = "Veuillez renseigner une URL d’API.";
+          status.className = "status error";
+          return;
+        }
+        state.settings.apiUrl = url;
+        saveState();
+        status.textContent = "Test de connexion...";
+        status.className = "status info";
+        try {
+          await loadYearData(state.activeYear, { force: true });
+          status.textContent = "Connexion OK & données synchronisées.";
+          status.className = "status ok";
+          renderCleaning();
+          renderBudget();
+          renderDashboard();
+        } catch (err) {
+          status.textContent = "Erreur API : " + err.message;
+          status.className = "status error";
+        }
+      });
+
+      document.getElementById("hourly-rate").addEventListener("input", () => {
+        state.settings.hourlyRate = Number(document.getElementById("hourly-rate").value || 0);
+        saveState();
+        renderCleaning();
+        renderBudget();
+        renderDashboard();
+      });
+
+      document.getElementById("urssaf-total-rate").addEventListener("input", () => {
+        state.settings.urssafTotalRate = Number(document.getElementById("urssaf-total-rate").value || 0);
+        saveState();
+        updateUrssafYourPartDisplay();
+        renderQuartersView();
+      });
+
+      document.getElementById("urssaf-aziza-rate").addEventListener("input", () => {
+        state.settings.urssafAzizaRate = Number(document.getElementById("urssaf-aziza-rate").value || 0);
+        saveState();
+        updateUrssafYourPartDisplay();
+        renderQuartersView();
+      });
+
+      document.getElementById("apartments-settings").addEventListener("input", (e) => {
+        const input = e.target;
+        if (!input.hasAttribute("data-ap-index")) return;
+        const idx = Number(input.getAttribute("data-ap-index"));
+        const field = input.getAttribute("data-field");
+        let val = input.value;
+        if (field === "hoursPerCleaning") val = Number(val || 0);
+        state.settings.apartments[idx][field] = val;
+        saveState();
+        renderCleaning();
+        renderBudget();
+        renderDashboard();
+      });
+
+      document.getElementById("budget-envelope-settings").addEventListener("input", (e) => {
+        const input = e.target;
+        if (!input.hasAttribute("data-env-index")) return;
+        const idx = Number(input.getAttribute("data-env-index"));
+        const field = input.getAttribute("data-env-field");
+        let val = input.value;
+        if (field === "amount") val = Number(val || 0);
+        if (field === "isCleaningProvision") val = (val === "true");
+        state.settings.budgetEnvelopePosts[idx][field] = val;
+        saveState();
+        renderBudget();
+      });
+
+      document.getElementById("budget-airbnb-received").addEventListener("input", (e) => {
+        const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
+        bm.airbnbReceived = Number(e.target.value || 0);
+        saveState();
+        renderBudget();
+        renderDashboard();
+      });
+      document.getElementById("budget-airbnb-remaining").addEventListener("input", (e) => {
+        const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
+        bm.airbnbRemaining = Number(e.target.value || 0);
+        saveState();
+        renderBudget();
+        renderDashboard();
+      });
+      document.getElementById("budget-airbnb-balance").addEventListener("input", (e) => {
+        const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
+        bm.airbnbIncomeBalance = Number(e.target.value || 0);
+        saveState();
+        renderBudget();
+        renderDashboard();
+      });
+      document.getElementById("budget-cleaning-balance").addEventListener("input", (e) => {
+        const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
+        bm.cleaningAccountBalance = Number(e.target.value || 0);
+        saveState();
+        renderBudget();
+        renderDashboard();
+      });
+
+      console.log("Maison Moisan Super App – version", APP_VERSION);
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      init().catch(err => console.error("Erreur init:", err));
+    });
+
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("sw.js").catch(err => {
+        console.warn("Service worker non enregistré:", err);
+      });
+    }
+  </script>
+</body>
+</html>
