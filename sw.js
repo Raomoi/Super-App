@@ -1,107 +1,68 @@
-// Version du cache – incrémente-la à chaque version déployée
-const CACHE_VERSION = 'mm-superapp-v3';
-const CACHE_NAME = CACHE_VERSION;
+const CACHE_NAME = "mm-superapp-v2-ionos-root";
 
-// Fichiers à pré-cacher (ajuste si besoin)
-const PRECACHE_URLS = [
-  './',
-  './index.html',
-  './manifest.webmanifest',
-  './sw.js',
-  './icon-192.png',
-  './icon-512.png',
-  './logo-maisonmoisan.jpg'
+const ASSETS = [
+  "/",                  // page d'accueil
+  "/index.html",
+  "/manifest.webmanifest",
+  "/sw.js",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/logo-maisonmoisan.jpg"
 ];
 
-// Installation : on pré-charge les ressources essentielles
-self.addEventListener('install', event => {
+// Installation : on pré-cache les assets de base
+self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
-      .catch(err => {
-        console.warn('[SW] Erreur pendant install:', err);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      return cache.addAll(ASSETS).catch((err) => {
+        console.warn("[SW] Erreur lors du precache:", err);
+      });
+    })
   );
 });
 
-// Activation : on supprime les vieux caches et on prend la main tout de suite
-self.addEventListener('activate', event => {
+// Activation : nettoyage des anciens caches
+self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(
-        keys.map(key => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
-        })
-      ))
-      .then(() => self.clients.claim())
-      .catch(err => {
-        console.warn('[SW] Erreur pendant activate:', err);
-      })
+    caches.keys().then((keys) =>
+      Promise.all(
+        keys
+          .filter((key) => key !== CACHE_NAME)
+          .map((key) => caches.delete(key))
+      )
+    )
   );
 });
 
-// Stratégie de fetch
-self.addEventListener('fetch', event => {
-  const request = event.request;
+// Stratégie cache-avec-retour-réseau
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
 
-  // On ne gère que les requêtes GET
-  if (request.method !== 'GET') {
-    return;
-  }
+  // On ne gère que les GET
+  if (req.method !== "GET") return;
 
-  const url = new URL(request.url);
+  const url = new URL(req.url);
 
-  // 1) On NE TOUCHE PAS aux appels Apps Script (Google)
-  if (url.origin === 'https://script.google.com') {
-    return; // le navigateur gère directement
-  }
+  // On ne touche pas aux requêtes externes (Google Apps Script, etc.)
+  if (url.origin !== self.location.origin) return;
 
-  // 2) On ne gère que les requêtes vers le même domaine que la PWA
-  if (url.origin !== self.location.origin) {
-    return; // laisser passer les CDN, polices, etc.
-  }
+  event.respondWith(
+    caches.match(req).then((cacheRes) => {
+      if (cacheRes) return cacheRes;
 
-  // 3) Pour les navigations / HTML : stratégie "network first"
-  if (request.mode === 'navigate' || request.headers.get('accept')?.includes('text/html')) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, copy);
+      return fetch(req)
+        .then((networkRes) => {
+          const resClone = networkRes.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(req, resClone);
           });
-          return response;
+          return networkRes;
         })
         .catch(() => {
-          return caches.match(request).then(cached => {
-            if (cached) return cached;
-            return caches.match('./');
-          });
-        })
-    );
-    return;
-  }
-
-  // 4) Pour les autres ressources (JS, CSS, images…) : "cache first"
-  event.respondWith(
-    caches.match(request).then(cached => {
-      if (cached) {
-        return cached;
-      }
-      return fetch(request)
-        .then(response => {
-          const copy = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(request, copy);
-          });
-          return response;
-        })
-        .catch(err => {
-          console.warn('[SW] Erreur fetch ressource:', err);
-          return cached || Promise.reject(err);
+          if (req.mode === "navigate") {
+            return caches.match("/index.html");
+          }
+          return new Response("Offline", { status: 503, statusText: "Offline" });
         });
     })
   );
