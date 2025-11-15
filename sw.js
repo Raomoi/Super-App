@@ -1,4 +1,4 @@
-const CACHE_NAME = "mm-superapp-v1-ionos-root";
+const CACHE_NAME = "mm-superapp-2025-02-v3";
 
 const ASSETS = [
   "/",                  // page d'accueil
