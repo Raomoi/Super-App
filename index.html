@@ -507,6 +507,18 @@
       </div>
 
       <div class="card">
+        <h2>Source Google Sheets (Budget)</h2>
+        <div class="input-row">
+          <label for="budget-api-url">URL API Budget (Apps Script)</label>
+          <input type="text" id="budget-api-url" placeholder="https://script.google.com/macros/s/.../exec" />
+        </div>
+        <button class="btn btn-outline btn-sm" id="budget-test-api-btn">
+          Tester & charger le budget
+        </button>
+        <div id="budget-api-status" class="status info">Aucune connexion testée pour le budget.</div>
+      </div>
+
+      <div class="card">
         <h2>Paramètres Ménages & URSSAF</h2>
         <div class="input-row">
           <label for="hourly-rate">Taux horaire ménage (€ / h)</label>
@@ -559,7 +571,7 @@
   </nav>
 
   <script>
-    const APP_VERSION = "mm-superapp-2025-02-v2";
+    const APP_VERSION = "mm-superapp-2025-02-v3";
 
     const MONTHS_FR = [
       "Janvier","Février","Mars","Avril","Mai","Juin",
@@ -588,6 +600,7 @@
 
       settings: {
         apiUrl: "",
+        budgetApiUrl: "",
         hourlyRate: 29,
         urssafTotalRate: 23.7,
         urssafAzizaRate: 13.1,
@@ -1195,6 +1208,7 @@
         saveState();
         renderBudget();
         renderDashboard();
+        saveBudgetMonthToApi(state.activeYear, state.activeMonthIndex);
       }, { once: true });
     }
 
@@ -1260,6 +1274,63 @@
       };
     }
 
+    async function loadBudgetYearFromApi(year, options = { force: true }) {
+      const apiUrl = state.settings.budgetApiUrl;
+      if (!apiUrl) return;
+
+      const url = apiUrl + (apiUrl.includes("?") ? "&" : "?") +
+        "action=getBudget&year=" + encodeURIComponent(year);
+
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("Erreur API Budget: " + resp.status);
+
+      const data = await resp.json();
+      if (!data || !Array.isArray(data.months)) return;
+
+      if (!state.budgetMonths[year]) state.budgetMonths[year] = {};
+      if (!state.budgetForecast[year]) state.budgetForecast[year] = {};
+
+      data.months.forEach(entry => {
+        const mi = Number(entry.monthIndex);
+        if (isNaN(mi)) return;
+
+        const remoteBudget = entry.budget || {};
+        const remoteForecast = entry.forecast || {};
+
+        const bm = getBudgetMonth(year, mi);
+        Object.assign(bm, remoteBudget);
+
+        const fc = getBudgetForecast(year, mi);
+        Object.assign(fc, remoteForecast);
+      });
+
+      saveState();
+    }
+
+    function saveBudgetMonthToApi(year, monthIndex) {
+      const apiUrl = state.settings.budgetApiUrl;
+      if (!apiUrl) return;
+
+      const bm = getBudgetMonth(year, monthIndex);
+      const fc = getBudgetForecast(year, monthIndex);
+
+      const params = new URLSearchParams({
+        action: "saveMonth",
+        year: String(year),
+        monthIndex: String(monthIndex),
+        budget: JSON.stringify(bm),
+        forecast: JSON.stringify(fc)
+      });
+
+      fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: params.toString()
+      }).catch(err => {
+        console.warn("Erreur saveBudgetMonthToApi:", err);
+      });
+    }
+
     function renderBudget() {
       const year = state.activeYear;
       const monthIndex = state.activeMonthIndex;
@@ -1283,28 +1354,24 @@
 
       const cards = [];
 
-      // 1) CA du mois
       cards.push({
         label: "CA du mois",
         value: formatMoney(res.ca),
         variant: res.ca >= res.enveloppeTotal ? "positive" : ""
       });
 
-      // 2) Charges (enveloppe)
       cards.push({
         label: "Charges (enveloppe)",
         value: formatMoney(res.enveloppeTotal),
         variant: ""
       });
 
-      // 3) Ménage réel
       cards.push({
         label: "Ménage réel",
         value: formatMoney(res.menageReel),
         variant: res.menageReel <= res.provisionMenage ? "positive" : "negative"
       });
 
-      // 4) Ménage prévisionnel
       let variantPrev;
       if (res.tresorerieMenageGlobale < res.menagePrev) {
         variantPrev = "negative";
@@ -1319,21 +1386,18 @@
         variant: variantPrev
       });
 
-      // 5) Écart provision / ménage (prévisionnel)
       cards.push({
         label: "Écart provision / ménage (prévisionnel)",
         value: formatMoney(res.ecartPrev),
         variant: res.ecartPrev >= 0 ? "positive" : "negative"
       });
 
-      // 6) Solde BnB Income (prévisionnel)
       cards.push({
         label: "Solde BnB Income (prévisionnel)",
         value: formatMoney(res.benePrevi),
         variant: res.benePrevi >= 0 ? "positive" : "negative"
       });
 
-      // 7) Solde ménage (prévisionnel)
       cards.push({
         label: "Solde ménage (prévisionnel)",
         value: formatMoney(res.soldeMenagePrev),
@@ -1488,6 +1552,13 @@
       updateUrssafYourPartDisplay();
       renderApartmentsSettings();
       renderBudgetEnvelopeSettings();
+
+      document.getElementById("budget-api-url").value = state.settings.budgetApiUrl || "";
+      const budgetStatus = document.getElementById("budget-api-status");
+      if (!state.settings.budgetApiUrl) {
+        budgetStatus.textContent = "Aucune connexion testée pour le budget.";
+        budgetStatus.className = "status info";
+      }
     }
 
     function renderCleaning() {
@@ -1507,6 +1578,14 @@
         await loadYearData(initialYear, { force: forceReload });
       } catch (e) {
         console.warn("Erreur chargement année:", e);
+      }
+
+      if (state.settings.budgetApiUrl) {
+        try {
+          await loadBudgetYearFromApi(initialYear, { force: false });
+        } catch (e) {
+          console.warn("Erreur chargement budget année:", e);
+        }
       }
 
       renderBottomNav();
@@ -1549,6 +1628,13 @@
         } catch (err) {
           console.warn("Erreur chargement année:", err);
         }
+        if (state.settings.budgetApiUrl) {
+          try {
+            await loadBudgetYearFromApi(newYear, { force: false });
+          } catch (err) {
+          console.warn("Erreur chargement budget année:", err);
+          }
+        }
         renderCleaning();
         renderBudget();
         renderDashboard();
@@ -1575,6 +1661,30 @@
           renderDashboard();
         } catch (err) {
           status.textContent = "Erreur API : " + err.message;
+          status.className = "status error";
+        }
+      });
+
+      document.getElementById("budget-test-api-btn").addEventListener("click", async () => {
+        const status = document.getElementById("budget-api-status");
+        const url = document.getElementById("budget-api-url").value.trim();
+        if (!url) {
+          status.textContent = "Veuillez renseigner une URL d’API Budget.";
+          status.className = "status error";
+          return;
+        }
+        state.settings.budgetApiUrl = url;
+        saveState();
+        status.textContent = "Test de connexion Budget...";
+        status.className = "status info";
+        try {
+          await loadBudgetYearFromApi(state.activeYear, { force: true });
+          status.textContent = "Budget chargé et synchronisé.";
+          status.className = "status ok";
+          renderBudget();
+          renderDashboard();
+        } catch (err) {
+          status.textContent = "Erreur API Budget : " + err.message;
           status.className = "status error";
         }
       });
@@ -1634,6 +1744,7 @@
         saveState();
         renderBudget();
         renderDashboard();
+        saveBudgetMonthToApi(state.activeYear, state.activeMonthIndex);
       });
       document.getElementById("budget-airbnb-remaining").addEventListener("input", (e) => {
         const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
@@ -1641,6 +1752,7 @@
         saveState();
         renderBudget();
         renderDashboard();
+        saveBudgetMonthToApi(state.activeYear, state.activeMonthIndex);
       });
       document.getElementById("budget-airbnb-balance").addEventListener("input", (e) => {
         const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
@@ -1648,6 +1760,7 @@
         saveState();
         renderBudget();
         renderDashboard();
+        saveBudgetMonthToApi(state.activeYear, state.activeMonthIndex);
       });
       document.getElementById("budget-cleaning-balance").addEventListener("input", (e) => {
         const bm = getBudgetMonth(state.activeYear, state.activeMonthIndex);
@@ -1655,6 +1768,7 @@
         saveState();
         renderBudget();
         renderDashboard();
+        saveBudgetMonthToApi(state.activeYear, state.activeMonthIndex);
       });
 
       console.log("Maison Moisan Super App – version", APP_VERSION);
