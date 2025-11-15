@@ -1,5 +1,5 @@
 // Version du cache – incrémente-la à chaque version déployée
-const CACHE_VERSION = 'mm-superapp-v1';
+const CACHE_VERSION = 'mm-superapp-v2';
 const CACHE_NAME = CACHE_VERSION;
 
 // Fichiers à pré-cacher (ajuste si besoin)
